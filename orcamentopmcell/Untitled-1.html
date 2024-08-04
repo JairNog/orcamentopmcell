@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Compras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #555;
+        }
+        .customer-info {
+            margin-bottom: 20px;
+        }
+        .customer-info label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .customer-info input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .shopping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .shopping-table th, .shopping-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            box-sizing: border-box;
+        }
+        .shopping-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .shopping-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        input[type="number"] {
+            width: 60px;
+        }
+        @media (max-width: 600px) {
+            .shopping-table th, .shopping-table td {
+                display: block;
+                width: 100%;
+                text-align: right;
+            }
+            .shopping-table th::before, .shopping-table td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: bold;
+                text-align: left;
+            }
+            .shopping-table th, .shopping-table td {
+                border: none;
+                border-bottom: 1px solid #ddd;
+            }
+            .shopping-table tr {
+                margin-bottom: 10px;
+                display: block;
+                border: 1px solid #ddd;
+            }
+            input[type="number"] {
+                width: 100%;
+            }
+            .customer-info input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PMCELL SÃO PAULO</h1>
+        <h2>FAÇA SEU ORÇAMENTO</h2>
+    </div>
+    <div class="customer-info">
+        <label for="customer-name">Nome:</label>
+        <input type="text" id="customer-name" placeholder="Nome do Cliente">
+        <label for="customer-phone">Telefone:</label>
+        <input type="text" id="customer-phone" placeholder="Telefone do Cliente">
+    </div>
+    <table class="shopping-table">
+        <thead>
+            <tr>
+                <th data-label="Produto">Produto</th>
+                <th data-label="Quantidade">Quantidade</th>
+                <th data-label="Preço Unitário">Preço Unitário</th>
+            </tr>
+        </thead>
+        <tbody id="product-list">
+            <!-- Produtos serão inseridos aqui via JavaScript -->
+        </tbody>
+    </table>
+    <button onclick="adicionarCarrinho()">Adicionar ao Carrinho</button>
+    <div id="carrinho-container">
+        <h2>Produtos Selecionados</h2>
+        <ul id="carrinho-list"></ul>
+        <h3>Valor Total do Orçamento: <span id="valor-total-orcamento">R$ 0,00</span></h3>
+    </div>
+    <button onclick="gerarImagem()">Gerar Imagem do Orçamento</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        const products = [
+            { name: 'FO11' , price: 2.90, discountQuantity: 100, discountPrice: 2.80 },
+            { name: 'FO12' , price: 6.50, discountQuantity: 50, discountPrice: 6.00 },
+            { name: 'FO13' , price: 6.50, discountQuantity: 50, discountPrice: 6.00 },
+            { name: 'FO14' , price: 7.50, discountQuantity: 100, discountPrice: 7.00 },
+            { name: 'FO15' , price: 7.50, discountQuantity: 100, discountPrice: 7.00 },
+            { name: 'FO16' , price: 7.50, discountQuantity: 100, discountPrice: 7.00 },
+            { name: 'FO17' , price: 8.50, discountQuantity: 10, discountPrice: 8.10 },
+            { name: 'FO18' , price: 6.50, discountQuantity: 50, discountPrice: 6.00 },
+            { name: 'FO19' , price: 4.30, discountQuantity: 50, discountPrice: 4.00 },
+            { name: 'FO21' , price: 8.50, discountQuantity: 10, discountPrice: 8.00 },
+            { name: 'FO23' , price: 9.00, discountQuantity: 50, discountPrice: 8.40 },
+            { name: 'FO25' , price: 10.50, discountQuantity: 10, discountPrice: 10.00 },
+            { name: 'FO26' , price: 6.00, discountQuantity: 1, discountPrice: 6.00 },
+            { name: 'FO31' , price: 12.00, discountQuantity: 1, discountPrice: 12.00 },
+            { name: 'FO42' , price: 18.00, discountQuantity: 20, discountPrice: 17.00 },
+            { name: 'FO45' , price: 18.00, discountQuantity: 20, discountPrice: 17.00 },
+            { name: 'FO51' , price: 9.00, discountQuantity: 30, discountPrice: 8.00 },
+            { name: 'FO52' , price: 8.50, discountQuantity: 30, discountPrice: 8.00 },
+            
+            { name: 'CB11 V8 (1M)' , price: 4.50, discountQuantity: 100, discountPrice: 3.99 },
+            { name: 'CB11 IPHONE (1M)' , price: 4.50, discountQuantity: 100, discountPrice: 3.99 },
+            { name: 'CB11 TIPO C (1M)' , price: 4.50, discountQuantity: 100, discountPrice: 3.99 },
+            { name: 'CB11 TIPO C/IPHONE (1M)' , price: 8.50, discountQuantity: 50, discountPrice: 7.70 },
+            { name: 'CB11 TIPO C/TIPO C (1M)' , price: 5.50, discountQuantity: 50, discountPrice: 5.00 },
+            { name: 'CB11 V8 (2M)' , price: 7.50, discountQuantity: 30, discountPrice: 6.80 },
+            { name: 'CB11 IPHONE (2M)' , price: 7.50, discountQuantity: 30, discountPrice: 6.80 },
+            { name: 'CB11 TIPO C (2M)' , price: 7.50, discountQuantity: 30, discountPrice: 6.80 },
+
+            { name: 'CB14' , price: 4.00, discountQuantity: 50, discountPrice: 3.50 },
+            { name: 'CB15 V8' , price: 4.90, discountQuantity: 1, discountPrice: 4.90 },
+            { name: 'CB15 IPHONE' , price: 4.90, discountQuantity: 1, discountPrice: 4.90 },
+            { name: 'CB15 TIPO C' , price: 4.90, discountQuantity: 1, discountPrice: 4.90 },
+            { name: 'CB16 TIPO C/TIPO C' , price: 8.00, discountQuantity: 20, discountPrice: 7.00 },
+            { name: 'CB42 TIPO C/TIPO C' , price: 11.00, discountQuantity: 50, discountPrice: 10.00 },
+        ];
+
+        const productList = document.getElementById('product-list');
+        const carrinhoList = document.getElementById('carrinho-list');
+        let carrinho = [];
+        let totalOrcamento = 0;
+
+        products.forEach(product => {
+            const row = document.createElement('tr');
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = product.name;
+
+            const quantityCell = document.createElement('td');
+            const quantityInput = document.createElement('input');
+            quantityInput.type = 'number';
+            quantityInput.min = '0';
+            quantityInput.value = '0';
+            quantityInput.dataset.name = product.name;
+            quantityInput.dataset.price = product.price;
+            quantityInput.dataset.discountQuantity = product.discountQuantity;
+            quantityInput.dataset.discountPrice = product.discountPrice;
+            quantityCell.appendChild(quantityInput);
+
+            const priceCell = document.createElement('td');
+            priceCell.textContent = `R$ ${product.price.toFixed(2)}`;
+
+            row.appendChild(nameCell);
+            row.appendChild(quantityCell);
+            row.appendChild(priceCell);
+
+            productList.appendChild(row);
+        });
+
+        function adicionarCarrinho() {
+            carrinho = [];
+            const inputs = document.querySelectorAll('input[type="number"]');
+            totalOrcamento = 0;
+
+            inputs.forEach(input => {
+                const quantity = parseInt(input.value);
+                if (quantity > 0) {
+                    const name = input.dataset.name;
+                    const price = parseFloat(input.dataset.price);
+                    const discountQuantity = parseInt(input.dataset.discountQuantity);
+                    const discountPrice = parseFloat(input.dataset.discountPrice);
+                    let finalPrice = price;
+
+                    if (quantity >= discountQuantity) {
+                        finalPrice = discountPrice;
+                    }
+
+                    const total = finalPrice * quantity;
+                    totalOrcamento += total;
+
+                    carrinho.push({ name, quantity, finalPrice, total });
+                }
+            });
+
+            renderizarCarrinho();
+            document.getElementById('valor-total-orcamento').textContent = `R$ ${totalOrcamento.toFixed(2)}`;
+        }
+
+        function renderizarCarrinho() {
+            carrinhoList.innerHTML = '';
+            carrinho.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${item.name} - Quantidade: ${item.quantity} - Preço Unitário: R$ ${item.finalPrice.toFixed(2)} - Total: R$ ${item.total.toFixed(2)}`;
+                carrinhoList.appendChild(listItem);
+            });
+        }
+
+        function gerarImagem() {
+            const nomeCliente = document.getElementById('customer-name').value;
+            const telefoneCliente = document.getElementById('customer-phone').value;
+            const container = document.createElement('div');
+
+            const header = document.createElement('div');
+            header.innerHTML = `
+                <h1>PMCELL SÃO PAULO</h1>
+                <h2>Orçamento</h2>
+                <p><strong>Nome:</strong> ${nomeCliente}</p>
+                <p><strong>Telefone:</strong> ${telefoneCliente}</p>
+            `;
+            container.appendChild(header);
+
+            const tabela = document.createElement('table');
+            tabela.classList.add('shopping-table');
+            tabela.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Preço Unitário</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${carrinho.map(item => `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>${item.quantity}</td>
+                            <td>R$ ${item.finalPrice.toFixed(2)}</td>
+                            <td>R$ ${item.total.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            container.appendChild(tabela);
+
+            const totalDiv = document.createElement('div');
+            totalDiv.innerHTML = `
+                <h3>Valor Total do Orçamento: R$ ${totalOrcamento.toFixed(2)}</h3>
+            `;
+            container.appendChild(totalDiv);
+
+            document.body.appendChild(container);
+
+            html2canvas(container).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'orcamento.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                document.body.removeChild(container);
+            });
+        }
+    </script>
+</body>
+</html>
+
+
